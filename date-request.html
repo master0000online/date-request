@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Date Request 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 40%, #fce4ec 100%);
+    font-family: 'Lato', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Confetti */
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 999;
+    display: none;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: fall 3s linear forwards;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(233,30,99,0.12);
+    text-align: center;
+    animation: fadeUp 0.5s ease;
+    position: relative;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    color: #c2185b;
+    font-size: 2rem;
+    line-height: 1.3;
+    margin-bottom: 32px;
+  }
+
+  /* Step 1 */
+  .yes-btn {
+    background: #e91e63;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 60px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .yes-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 20px rgba(233,30,99,0.35);
+  }
+
+
+
+  /* Calendar */
+  .section-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #aaa;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+
+  .calendar {
+    border: 1.5px solid #f48fb1;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .cal-header span {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: #c2185b;
+    font-size: 1rem;
+  }
+
+  .cal-nav {
+    background: none;
+    border: none;
+    color: #e91e63;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: background 0.15s;
+  }
+  .cal-nav:hover { background: #fce4ec; }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-day-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    text-align: center;
+    padding: 4px 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #555;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .cal-day:hover:not(.empty):not(.past) { background: #fce4ec; color: #c2185b; }
+  .cal-day.selected { background: #e91e63; color: white; font-weight: 700; }
+  .cal-day.today { border: 2px solid #f48fb1; }
+  .cal-day.past { color: #ddd; cursor: default; }
+  .cal-day.empty { cursor: default; }
+
+  /* Time slots */
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .time-slot {
+    border: 1.5px solid #f48fb1;
+    background: white;
+    border-radius: 50px;
+    padding: 8px 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #c2185b;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .time-slot:hover { background: #fce4ec; }
+  .time-slot.selected { background: #e91e63; color: white; border-color: #e91e63; }
+
+  /* Food grid */
+  .food-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .food-item {
+    border: 1.5px solid #f8bbd0;
+    border-radius: 16px;
+    padding: 20px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .food-item:hover { border-color: #e91e63; background: #fff5f7; }
+  .food-item.selected { border-color: #e91e63; background: #fff0f5; box-shadow: 0 0 0 2px #f48fb1; }
+
+  .food-emoji { font-size: 2rem; }
+  .food-name { font-size: 0.85rem; color: #555; font-weight: 600; }
+
+  /* Action button */
+  .action-btn {
+    background: #e91e63;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 40px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .action-btn:not(:disabled):hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(233,30,99,0.35); }
+
+  /* Confirmation */
+  .yay-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #e91e63;
+    margin-bottom: 28px;
+  }
+
+  .confirm-details {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .confirm-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.05rem;
+    color: #444;
+  }
+
+  .confirm-row .icon { font-size: 1.3rem; }
+
+  .confirm-message {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: #c2185b;
+    font-size: 1.1rem;
+    margin-top: 8px;
+  }
+
+  .fine-print {
+    font-size: 0.72rem;
+    color: #bbb;
+    margin-top: 20px;
+    font-style: italic;
+  }
+
+  /* Hidden */
+  .step { display: none; }
+  .step.active { display: block; animation: fadeUp 0.4s ease; }
+</style>
+</head>
+<body>
+
+<div class="confetti-container" id="confetti"></div>
+
+<div class="card">
+
+  <!-- Step 1: Will you go on a date? -->
+  <div class="step active" id="step1">
+    <h1>🌸 Will you go on a date with me? 🌸</h1>
+    <button class="yes-btn" onclick="goToStep(2)">YES ♥</button>
+  </div>
+
+  <!-- Step 2: Pick a day & time -->
+  <div class="step" id="step2">
+    <h1>So... when are you free? 📅🐾</h1>
+    <p class="section-label">Pick a day</p>
+    <div class="calendar">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+        <span id="cal-title"></span>
+        <button class="cal-nav" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <p class="section-label">What time?</p>
+    <div class="time-grid" id="time-grid"></div>
+    <button class="action-btn" id="set-date-btn" onclick="goToStep(3)" disabled>Set the date ❤️</button>
+  </div>
+
+  <!-- Step 3: Food choice -->
+  <div class="step" id="step3">
+    <h1>What should we do? 🌟✨</h1>
+    <div class="food-grid">
+      <div class="food-item" onclick="selectFood(this, 'Pizza')"><span class="food-emoji">🍕</span><span class="food-name">Pizza</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Sushi')"><span class="food-emoji">🍣</span><span class="food-name">Sushi</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Ramen')"><span class="food-emoji">🍜</span><span class="food-name">Ramen</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Ice Cream')"><span class="food-emoji">🍦</span><span class="food-name">Ice Cream</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Watch a Movie')"><span class="food-emoji">🎬</span><span class="food-name">Watch a Movie</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Drawing & Art')"><span class="food-emoji">🎨</span><span class="food-name">Drawing & Art</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Beach Day')"><span class="food-emoji">🏖️</span><span class="food-name">Beach Day</span></div>
+      <div class="food-item" onclick="selectFood(this, 'Go to Park')"><span class="food-emoji">🌳</span><span class="food-name">Go to Park</span></div>
+    </div>
+    <button class="action-btn" id="next-btn" onclick="goToStep(4)" disabled>Next 📌</button>
+  </div>
+
+  <!-- Step 4: Confirmation -->
+  <div class="step" id="step4">
+    <div class="yay-title">Thank you, I love you 💕</div>
+    <div class="confirm-details">
+      <div class="confirm-row"><span class="icon">📅</span><span id="conf-date"></span></div>
+      <div class="confirm-row"><span class="icon">⏰</span><span id="conf-time"></span></div>
+      <div class="confirm-row"><span class="icon">🍽️</span><span id="conf-food"></span></div>
+    </div>
+    <div class="confirm-message">I can't wait to see you! 🌹✨</div>
+    <div class="confirm-message" style="margin-top:12px;">Thanks, I love you ❤️</div>
+
+  </div>
+
+</div>
+
+<script>
+  let selectedDate = null;
+  let selectedTime = null;
+  let selectedFood = null;
+  let currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
+
+  const TIMES = ['12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','6:30 PM','7:00 PM','7:30 PM','8:00 PM','8:30 PM'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  function goToStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    if (n === 2) renderCalendar();
+    if (n === 4) showConfirmation();
+  }
+
+  function renderCalendar() {
+    const title = document.getElementById('cal-title');
+    title.textContent = MONTHS[currentMonth] + ' ' + currentYear;
+
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+
+    DAYS.forEach(d => {
+      const lbl = document.createElement('div');
+      lbl.className = 'cal-day-label';
+      lbl.textContent = d;
+      grid.appendChild(lbl);
+    });
+
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-day empty';
+      grid.appendChild(empty);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayEl = document.createElement('div');
+      const thisDate = new Date(currentYear, currentMonth, d);
+      dayEl.className = 'cal-day';
+      dayEl.textContent = d;
+
+      if (thisDate < today) {
+        dayEl.classList.add('past');
+      } else {
+        if (thisDate.toDateString() === today.toDateString()) dayEl.classList.add('today');
+        if (selectedDate && thisDate.toDateString() === selectedDate.toDateString()) dayEl.classList.add('selected');
+        dayEl.addEventListener('click', () => {
+          selectedDate = thisDate;
+          checkStep2();
+          renderCalendar();
+        });
+      }
+
+      grid.appendChild(dayEl);
+    }
+
+    // Render times
+    const tg = document.getElementById('time-grid');
+    tg.innerHTML = '';
+    TIMES.forEach(t => {
+      const slot = document.createElement('div');
+      slot.className = 'time-slot' + (selectedTime === t ? ' selected' : '');
+      slot.textContent = t;
+      slot.addEventListener('click', () => {
+        selectedTime = t;
+        checkStep2();
+        renderCalendar();
+      });
+      tg.appendChild(slot);
+    });
+  }
+
+  function changeMonth(dir) {
+    currentMonth += dir;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    renderCalendar();
+  }
+
+  function checkStep2() {
+    document.getElementById('set-date-btn').disabled = !(selectedDate && selectedTime);
+  }
+
+  function selectFood(el, name) {
+    document.querySelectorAll('.food-item').forEach(f => f.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedFood = name;
+    document.getElementById('next-btn').disabled = false;
+  }
+
+  function showConfirmation() {
+    const opts = { weekday:'long', month:'long', day:'numeric' };
+    document.getElementById('conf-date').textContent = selectedDate.toLocaleDateString('en-US', opts);
+    document.getElementById('conf-time').textContent = selectedTime;
+    document.getElementById('conf-food').textContent = selectedFood;
+    launchConfetti();
+  }
+
+  function launchConfetti() {
+    const container = document.getElementById('confetti');
+    container.style.display = 'block';
+    const colors = ['#e91e63','#f48fb1','#ce93d8','#f8bbd0','#fff176','#ffccbc'];
+    for (let i = 0; i < 80; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.top = '-10px';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDelay = Math.random() * 2 + 's';
+      piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+      piece.style.width = piece.style.height = (6 + Math.random() * 8) + 'px';
+      container.appendChild(piece);
+    }
+    setTimeout(() => { container.style.display = 'none'; container.innerHTML = ''; }, 5000);
+  }
+</script>
+</body>
+</html>
